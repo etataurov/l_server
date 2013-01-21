@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import tornado.ioloop
 import tornado.web
 import sockjs.tornado
@@ -9,16 +10,14 @@ class IndexHandler(tornado.web.RequestHandler):
     def post(self):
         event_type = self.get_argument('event', 'message')
         event_data = self.get_argument('data', None)
-        try:
-            data = json.loads(event_data)
-        except:
-            data = event_data
+        session_id = self.get_argument('session_id')
         to_send = {
             "event": event_type,
-            "data": data
+            "data": event_data
         }
         for p in ChatConnection.participants:
-            p.send(to_send)
+            if p.session_id == session_id:
+                p.send(to_send)
         self.finish()
 
 
@@ -31,6 +30,10 @@ class ChatConnection(sockjs.tornado.SockJSConnection):
         print 'client connected'
         # Add client to the clients list
         self.participants.add(self)
+
+    def on_message(self, message):
+        data = json.loads(message)
+        self.session_id = data.get('session_id')
 
     def on_close(self):
         print 'client disconnected'
