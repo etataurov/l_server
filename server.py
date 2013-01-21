@@ -9,7 +9,6 @@ class IndexHandler(tornado.web.RequestHandler):
     def post(self):
         event_type = self.get_argument('event', 'message')
         event_data = self.get_argument('data', None)
-        uniq_id = self.get_argument('uniq_id')
         try:
             data = json.loads(event_data)
         except:
@@ -19,8 +18,7 @@ class IndexHandler(tornado.web.RequestHandler):
             "data": data
         }
         for p in ChatConnection.participants:
-            if p.uniq_id != uniq_id:
-                p.send(to_send)
+            p.send(to_send)
         self.finish()
 
 
@@ -32,9 +30,7 @@ class ChatConnection(sockjs.tornado.SockJSConnection):
     def on_open(self, info):
         print 'client connected'
         # Add client to the clients list
-        self.uniq_id = info.path
         self.participants.add(self)
-        self.send({'event': 'init', 'uniq_id': self.uniq_id})
 
     def on_close(self):
         print 'client disconnected'
