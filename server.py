@@ -3,7 +3,7 @@ import json
 import tornado.ioloop
 import tornado.web
 import sockjs.tornado
-
+import logging
 
 class IndexHandler(tornado.web.RequestHandler):
 
@@ -42,21 +42,20 @@ class ChatConnection(sockjs.tornado.SockJSConnection):
         # Remove client from the clients list and broadcast leave message
         self.participants.remove(self)
 
+logging.getLogger().setLevel(logging.DEBUG)
+
+# 1. Create chat router
+ChatRouter = sockjs.tornado.SockJSRouter(ChatConnection, '/sockjs')
+
+# 2. Create Tornado application
+app = tornado.web.Application(
+        [(r"/", IndexHandler)] + ChatRouter.urls
+)
 
 if __name__ == "__main__":
-    import logging
-    logging.getLogger().setLevel(logging.DEBUG)
-
-    # 1. Create chat router
-    ChatRouter = sockjs.tornado.SockJSRouter(ChatConnection, '/sockjs')
-
-    # 2. Create Tornado application
-    app = tornado.web.Application(
-            [(r"/", IndexHandler)] + ChatRouter.urls
-    )
-
     # 3. Make Tornado app listen on port 8001
     app.listen(8001)
 
     # 4. Start IOLoop
     tornado.ioloop.IOLoop.instance().start()
+	
