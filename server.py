@@ -8,12 +8,14 @@ import sockjs.tornado
 class IndexHandler(tornado.web.RequestHandler):
 
     def post(self):
-        event_type = self.get_argument('event', 'message')
+        event_type = self.get_argument('event')
         event_data = self.get_argument('data', None)
         session_id = self.get_argument('session_id')
+        user = self.get_argument('user')
         to_send = {
             "event": event_type,
-            "data": event_data
+            "data": event_data,
+            'user': user
         }
         for p in ChatConnection.participants:
             if p.session_id == session_id:
